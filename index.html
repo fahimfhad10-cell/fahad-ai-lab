@@ -40,12 +40,12 @@ a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}.
 <div class="shell">
 <header class="topbar">
  <div class="brand"><div class="logo">FA</div><div><div class="brand-name">FAHAD AI LAB</div><div class="brand-sub">PERSONAL NEURAL ARCHIVE</div></div></div>
- <div class="status"><i class="pulse"></i> SYSTEM ONLINE</div>
+ <div class="status"><i class="pulse"></i> PUBLIC ARCHIVE · SUPABASE</div>
 </header>
 <section class="hero">
- <div><div class="eyebrow">/// Your personal command center</div><h1>COLLECT.<br><span>CONNECT. CREATE.</span></h1><p>A private command deck for your favorite AI tools, creative discoveries, and important links. Keep your digital world organized in one place.</p>
- <div class="hero-actions"><button class="btn primary" onclick="openModal('tool')">＋ ADD AI TOOL</button><button class="btn" onclick="openModal('link')">↗ SAVE A LINK</button></div></div>
- <div class="hero-card"><div class="card-label">ARCHIVE STATUS // 001</div><div class="big-number" id="totalHero">08</div><p>STARTER TOOLS IN YOUR PERSONAL COLLECTION</p><div class="mini-bars"><i style="height:35%"></i><i style="height:65%"></i><i style="height:45%"></i><i style="height:90%"></i><i style="height:55%"></i><i style="height:78%"></i><i style="height:42%"></i></div></div>
+ <div><div class="eyebrow">/// Your personal command center</div><h1>COLLECT.<br><span>CONNECT. CREATE.</span></h1><p>A public archive of useful AI tools, creative discoveries, and important links. Explore and open everything in one place.</p>
+ <div class="hero-actions"><span class="btn primary" style="cursor:default">PUBLIC · READ ONLY</span></div></div>
+ <div class="hero-card"><div class="card-label">ARCHIVE STATUS // 001</div><div class="big-number" id="totalHero">08</div><p>TOOLS & LINKS IN THE PUBLIC ARCHIVE</p><div class="mini-bars"><i style="height:35%"></i><i style="height:65%"></i><i style="height:45%"></i><i style="height:90%"></i><i style="height:55%"></i><i style="height:78%"></i><i style="height:42%"></i></div></div>
 </section>
 <div class="stats"><div class="stat"><small>AI tools</small><strong id="toolCount">08</strong></div><div class="stat"><small>Saved links</small><strong id="linkCount">00</strong></div><div class="stat"><small>Categories</small><strong>06</strong></div></div>
 <section>
@@ -58,14 +58,6 @@ a{color:inherit;text-decoration:none}button,input,select,textarea{font:inherit}.
 </section>
 <footer class="footer"><span>FAHAD AI LAB © <span id="year"></span></span><span>BUILT FOR CURIOSITY · POWERED BY YOU</span></footer>
 </div>
-<div class="modal" id="modal" onclick="if(event.target===this)closeModal()"><div class="modal-box"><div class="modal-head"><h3 id="modalTitle">ADD TO ARCHIVE</h3><button class="close" onclick="closeModal()">×</button></div><form id="entryForm">
-<input type="hidden" id="entryType">
-<div class="field-wrap"><label for="entryName">NAME / TITLE</label><input class="field" id="entryName" required maxlength="80" placeholder="e.g. Midjourney or Inspiring Reel"></div>
-<div class="field-wrap"><label for="entryUrl">WEBSITE / LINK URL</label><input class="field" id="entryUrl" required type="url" placeholder="https://..."></div>
-<div class="field-wrap"><label for="entryCategory">CATEGORY</label><select class="field" id="entryCategory"><option>Chat</option><option>Image</option><option>Video</option><option>Productivity</option><option>Research</option><option>Social</option><option>Learning</option><option>Other</option></select></div>
-<div class="field-wrap"><label for="entryNote">SHORT NOTE (OPTIONAL)</label><textarea class="field" id="entryNote" maxlength="220" placeholder="Why is this link useful?"></textarea></div>
-<div class="modal-actions"><button type="button" class="btn" onclick="closeModal()">CANCEL</button><button class="btn primary" type="submit">SAVE TO VAULT</button></div>
-</form></div></div>
 <script>const SUPABASE_URL = "https://oaxmrjwiuhrfdlngytwh.supabase.co";
 const SUPABASE_KEY = "sb_publishable_yqKtXXugMKrVudNuO-paFQ_mp1o_Bfa";
 
@@ -95,27 +87,47 @@ const starterTools=[
 {name:'Perplexity',url:'https://www.perplexity.ai/',category:'Research',note:'Research answers with linked sources.'},
 {name:'Notion AI',url:'https://www.notion.so/',category:'Productivity',note:'Organize notes, projects and your knowledge.'}
 ];
-let tools=JSON.parse(localStorage.getItem('fal_tools')||'null')||starterTools;
-let links=JSON.parse(localStorage.getItem('fal_links')||'[]');
+
+let tools=[];
+let links=[];
 let active='All';
 const categories=['All','Chat','Image','Video','Productivity','Research','Other'];
-function persist(){localStorage.setItem('fal_tools',JSON.stringify(tools));localStorage.setItem('fal_links',JSON.stringify(links))}
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function initial(s){return esc((s||'AI').trim().slice(0,2).toUpperCase())}
 function render(){
  const q=(document.getElementById('toolSearch').value||'').toLowerCase();
  document.getElementById('filters').innerHTML=categories.map(c=>`<button class="chip ${active===c?'active':''}" onclick="active='${c}';render()">${c}</button>`).join('');
- let list=tools.filter(t=>(active==='All'||t.category===active)&&(`${t.name} ${t.note} ${t.category}`).toLowerCase().includes(q));
- document.getElementById('toolGrid').innerHTML=list.length?list.map(t=>`<article class="item"><div class="item-top"><div class="item-icon">${initial(t.name)}</div><span class="tag">${esc(t.category)}</span></div><h3>${esc(t.name)}</h3><p>${esc(t.note||'Saved in your AI collection.')}</p><div class="item-foot"><a href="${esc(t.url)}" target="_blank" rel="noopener noreferrer">OPEN PLATFORM ↗</a>${t.custom?`<button class="delete" title="Delete" onclick="removeItem('tool','${t.id}')">×</button>`:''}</div></article>`).join(''):'<div class="empty">No tools found. Try another search or add a new AI tool.</div>';
+ const list=tools.filter(t=>(active==='All'||t.category===active)&&(`${t.name} ${t.note} ${t.category}`).toLowerCase().includes(q));
+ document.getElementById('toolGrid').innerHTML=list.length?list.map(t=>`<article class="item"><div class="item-top"><div class="item-icon">${initial(t.name)}</div><span class="tag">${esc(t.category||'Other')}</span></div><h3>${esc(t.name)}</h3><p>${esc(t.note||'Saved in the AI collection.')}</p><div class="item-foot"><a href="${esc(t.url)}" target="_blank" rel="noopener noreferrer">OPEN PLATFORM ↗</a></div></article>`).join(''):'<div class="empty">No tools found. Try another search.</div>';
  const lq=(document.getElementById('linkSearch').value||'').toLowerCase();
  const found=links.filter(l=>`${l.name} ${l.note} ${l.category} ${l.url}`.toLowerCase().includes(lq));
- document.getElementById('linkGrid').innerHTML=found.length?found.slice().reverse().map(l=>`<article class="item"><div class="item-top"><div class="item-icon">↗</div><span class="tag">${esc(l.category)}</span></div><h3>${esc(l.name)}</h3><p>${esc(l.note||l.url)}</p><div class="item-foot"><a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">OPEN SAVED LINK ↗</a><button class="delete" title="Delete" onclick="removeItem('link','${l.id}')">×</button></div></article>`).join(''):'<div class="empty">Your link vault is empty. Save an important Reel, video, article or website using “Save a Link”.</div>';
- document.getElementById('toolCount').textContent=String(tools.length).padStart(2,'0');document.getElementById('linkCount').textContent=String(links.length).padStart(2,'0');document.getElementById('totalHero').textContent=String(tools.length+links.length).padStart(2,'0');
+ document.getElementById('linkGrid').innerHTML=found.length?found.slice().reverse().map(l=>`<article class="item"><div class="item-top"><div class="item-icon">↗</div><span class="tag">${esc(l.category||'Other')}</span></div><h3>${esc(l.name)}</h3><p>${esc(l.note||l.url)}</p><div class="item-foot"><a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">OPEN SAVED LINK ↗</a></div></article>`).join(''):'<div class="empty">No saved links yet.</div>';
+ document.getElementById('toolCount').textContent=String(tools.length).padStart(2,'0');
+ document.getElementById('linkCount').textContent=String(links.length).padStart(2,'0');
+ document.getElementById('totalHero').textContent=String(tools.length+links.length).padStart(2,'0');
 }
-function openModal(type){document.getElementById('entryType').value=type;document.getElementById('modalTitle').textContent=type==='tool'?'ADD AI TOOL':'SAVE IMPORTANT LINK';document.getElementById('entryName').placeholder=type==='tool'?'e.g. Midjourney':'e.g. My favorite Facebook Reel';document.getElementById('entryCategory').value=type==='tool'?'Chat':'Social';document.getElementById('entryNote').placeholder=type==='tool'?'What do you use this AI for?':'Why do you want to keep this link?';document.getElementById('modal').classList.add('open');document.getElementById('entryName').focus()}
-function closeModal(){document.getElementById('modal').classList.remove('open')}
-document.getElementById('entryForm').addEventListener('submit',e=>{e.preventDefault();const type=document.getElementById('entryType').value;const item={id:Date.now().toString(),name:document.getElementById('entryName').value.trim(),url:document.getElementById('entryUrl').value.trim(),category:document.getElementById('entryCategory').value,note:document.getElementById('entryNote').value.trim(),custom:true};if(type==='tool')tools.push(item);else links.push(item);persist();e.target.reset();closeModal();active='All';render()});
-function removeItem(type,id){if(!confirm('Remove this item from your archive?'))return;if(type==='tool')tools=tools.filter(x=>x.id!==id);else links=links.filter(x=>x.id!==id);persist();render()}
-document.getElementById('year').textContent=new Date().getFullYear();render();
+async function loadArchive(){
+ const status=document.querySelector('.status');
+ try{
+  const [tr,lr]=await Promise.all([
+   supabaseClient.from('user_tools').select('id,name,url,category,note').order('created_at',{ascending:true}),
+   supabaseClient.from('user_links').select('id,name,url,category,note').order('created_at',{ascending:true})
+  ]);
+  if(tr.error) throw tr.error;
+  if(lr.error) throw lr.error;
+  tools=tr.data||[]; links=lr.data||[];
+  status.innerHTML='<i class="pulse"></i> SUPABASE CONNECTED';
+  render();
+ }catch(err){
+  console.error('Supabase load error:',err);
+  status.innerHTML='<i class="pulse" style="background:#ff789f"></i> DATABASE CONNECTION ERROR';
+  document.getElementById('toolGrid').innerHTML='<div class="empty">Could not load AI tools. Check Supabase connection and public SELECT policies.</div>';
+  document.getElementById('linkGrid').innerHTML='<div class="empty">Could not load saved links. Check Supabase connection and public SELECT policies.</div>';
+  document.getElementById('toolCount').textContent='00';
+  document.getElementById('linkCount').textContent='00';
+  document.getElementById('totalHero').textContent='00';
+ }
+}
+document.getElementById('year').textContent=new Date().getFullYear();loadArchive();
 </script>
 </body></html>
